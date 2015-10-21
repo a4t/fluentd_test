@@ -1,0 +1,39 @@
+fluentdproducer:
+  build: ./fluentd
+  volumes_from:
+    - datastore
+  volumes:
+    - ./fluentd/producer-td-agent.conf:/etc/td-agent/td-agent.conf
+    - ./fluentd/plugins/:/var/app/fluentd/plugins/
+  volumes_from:
+    - datastore
+  command: -p /var/app/fluentd/plugins/
+  links:
+    - fluentdconsumer:fluentdconsumer
+
+fluentdconsumer:
+  build: ./fluentd
+  volumes_from:
+    - datastore
+  volumes:
+    - ./fluentd/consumer-td-agent.conf:/etc/td-agent/td-agent.conf
+  volumes_from:
+    - datastore
+  ports:
+    - "24224:24224"
+    - "24224:24224/udp"
+
+datastore:
+  build: ./datastore
+  volumes:
+    - /var/log/nginx
+  command: mkdir /var/log/nginx
+
+nginx:
+  build: ./nginx
+  volumes_from:
+    - datastore
+  volumes:
+    - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+  ports:
+    - "80:80"
